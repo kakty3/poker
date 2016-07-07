@@ -235,11 +235,19 @@ class Combo(_ReprMixin):
         self._set_cards_in_order(first, second)
         return self
 
+    @classmethod
+    def from_array(cls, array):
+        self = super(Combo, cls).__new__(cls)
+        self._set_cards_in_order(*array)
+        return self
+
     def __unicode__(self):
-        return '{}{}'.format(self.first, self.second)
+        # return '{}{}'.format(self.first, self.second)
+        return ''.join(self._cards)
 
     def __hash__(self):
-        return hash(self.first) + hash(self.second)
+        # return hash(self.first) + hash(self.second)
+        return sum([hash(card) for card in self._cards])
 
     def __getstate__(self):
         return {'first': self.first, 'second': self.second}
@@ -280,10 +288,29 @@ class Combo(_ReprMixin):
                 return self.second < other.second
             return self_first < other_first
 
-    def _set_cards_in_order(self, first, second):
-        self.first, self.second = Card(first), Card(second)
-        if self.first < self.second:
-            self.first, self.second = self.second, self.first
+    def _set_cards_in_order(self, *args):
+        """Set cards in nondecreasing order"""
+        self._cards = [Card(card_str) for card_str in args]
+        self._cards.sort(reverse=True)
+        # self.first, self.second = self._cards[:2]
+        # if self.first < self.second:
+        #     self.first, self.second = self.second, self.first
+
+    @property
+    def first(self):
+        return self._cards[0]
+
+    @first.setter
+    def first(self, value):
+        self._cards[0] = value
+
+    @property
+    def second(self):
+        return self._cards[1]
+
+    @second.setter
+    def second(self, value):
+        self._cards[1] = value
 
     def to_hand(self):
         """Convert combo to :class:`Hand` object, losing suit information."""

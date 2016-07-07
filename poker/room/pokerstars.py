@@ -107,12 +107,13 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                         """, re.VERBOSE)
     _table_re = re.compile(r"^Table '(.*)' (\d+)-max Seat #(?P<button>\d+) is the button")
     _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
-    _hero_re = re.compile(r"^Dealt to (?P<hero_name>.+?) \[(..) (..)\]")
+    _hero_re = re.compile(r"Dealt to (?P<hero_name>.+?) \[(?P<cards>.+?)\]")
     _pot_re = re.compile(r"^Total pot (\d+(?:\.\d+)?) .*\| Rake (\d+(?:\.\d+)?)")
     _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \((\d+(?:\.\d+)?)\)")
     _showdown_re = re.compile(r"^Seat (\d+): (.+?) showed \[.+?\] and won")
     _ante_re = re.compile(r".*posts the ante (\d+(?:\.\d+)?)")
     _board_re = re.compile(r"(?<=[\[ ])(..)(?=[\] ])")
+    _money_re = re.compile(r"\$\d+\.?\d+")
 
     def parse_header(self):
         # sections[0] is before HOLE CARDS
@@ -213,7 +214,9 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
         hole_cards_line = self._splitted[self._sections[0] + 2]
         match = self._hero_re.match(hole_cards_line)
         hero, hero_index = self._get_hero_from_players(match.group('hero_name'))
-        hero = hero._replace(combo=Combo(match.group(2) + match.group(3)))
+        p = re.compile(r'(..\b)')
+        cards = re.findall(p, match.group('cards'))
+        hero = hero._replace(combo=Combo.from_array(cards))
         self.hero = self.players[hero_index] = hero
         if self.button.name == self.hero.name:
             self.button = hero
