@@ -20,6 +20,10 @@ __all__ = ['PokerStarsHandHistory', 'Notes']
 
 @implementer(hh.IStreet)
 class _Street(hh._BaseStreet):
+    _player_action_re = re.compile(r'(?P<name>.+):\s(?P<action>.+?\b)(?:\s?.?(?P<amount>\d+(?:\.\d+)?))?')
+    _uncalled_re = re.compile(r'^Uncalled bet \(.?(?P<amount>\d+(?:\.\d+))\).+(?P<name>\b[^\s]+)$')
+    _collected_re = re.compile(r'(?P<name>.+?) collected .?(?P<amount>\d+(?:\.\d+)?)')
+
     def _parse_cards(self, boardline):
         self.cards = (Card(boardline[1:3]), Card(boardline[4:6]), Card(boardline[7:9]))
 
@@ -43,19 +47,15 @@ class _Street(hh._BaseStreet):
         self.actions = tuple(actions) if actions else None
 
     def _parse_uncalled(self, line):
-        first_paren_index = line.find('(')
-        second_paren_index = line.find(')')
-        amount = line[first_paren_index + 1:second_paren_index]
-        name_start_index = line.find('to ') + 3
-        name = line[name_start_index:]
+        match = self._uncalled_re.match(line)
+        name = match.group('name')
+        amount = match.group('amount')
         return name, Action.RETURN, Decimal(amount)
 
     def _parse_collected(self, line):
-        first_space_index = line.find(' ')
-        name = line[:first_space_index]
-        second_space_index = line.find(' ', first_space_index + 1)
-        third_space_index = line.find(' ', second_space_index + 1)
-        amount = line[second_space_index + 1:third_space_index]
+        match = self._collected_re.match(line)
+        name = match.group('name')
+        amount = match.group('amount')
         self.pot = Decimal(amount)
         return name, Action.WIN, self.pot
 
@@ -65,14 +65,16 @@ class _Street(hh._BaseStreet):
         return name, Action.MUCK, None
 
     def _parse_player_action(self, line):
-        name, _, action = line.partition(': ')
-        action, _, amount = action.partition(' ')
-        amount, _, _ = amount.partition(' ')
+        match = self._player_action_re.match(line)
+        name = match.group('name')
+        action = Action(match.group('action'))
+        amount = match.group('amount')
+        try:
+            amount = Decimal(amount)
+        except TypeError:
+            pass
 
-        if amount:
-            return name, Action(action), Decimal(amount)
-        else:
-            return name, Action(action), None
+        return name, action, amount
 
 
 @implementer(hh.IHandHistory)
@@ -108,8 +110,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     _table_re = re.compile(r"^Table '(.*)' (\d+)-max Seat #(?P<button>\d+) is the button")
     _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
     _hero_re = re.compile(r"Dealt to (?P<hero_name>.+?) \[(?P<cards>.+?)\]")
-    _pot_re = re.compile(r"^Total pot (\d+(?:\.\d+)?) .*\| Rake (\d+(?:\.\d+)?)")
-    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \((\d+(?:\.\d+)?)\)")
+    _pot_re = re.compile(r"^Total pot .?(\d+(?:\.\d+)?) .*\| Rake .?(\d+(?:\.\d+)?)")
+    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \(.?(\d+(?:\.\d+)?)\)")
     _showdown_re = re.compile(r"^Seat (\d+): (.+?) showed \[.+?\] and won")
     _ante_re = re.compile(r".*posts the ante (\d+(?:\.\d+)?)")
     _board_re = re.compile(r"(?<=[\[ ])(..)(?=[\] ])")
@@ -201,7 +203,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             index = int(match.group('seat')) - 1
             self.players[index] = hh._Player(
                 name=match.group('name'),
-                stack=int(match.group('stack')),
+                stack=Decimal(match.group('stack')),
                 seat=int(match.group('seat')),
                 combo=None
             )
@@ -253,7 +255,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     def _parse_pot(self):
         potline = self._splitted[self._sections[-1] + 2]
         match = self._pot_re.match(potline)
-        self.total_pot = int(match.group(1))
+        self.total_pot = Decimal(match.group(1))
 
     def _parse_board(self):
         boardline = self._splitted[self._sections[-1] + 3]
