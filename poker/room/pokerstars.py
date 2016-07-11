@@ -40,6 +40,16 @@ class _Street(hh._BaseStreet):
                 continue
             elif ':' in line:
                 action = self._parse_player_action(line)
+            elif 'joins the table' in line:
+                action = self._parse_join_table(line)
+            elif 'leaves the table' in line:
+                action = self._parse_leave_table(line)
+            elif 'has timed out' in line:
+                action = self._parse_timed_out(line)
+            elif 'is connected' in line:
+                action = self._parse_connected(line)
+            elif 'is disconnected' in line:
+                action = self._parse_disconnected(line)
             else:
                 raise RuntimeError("bad action line: " + line)
 
@@ -76,6 +86,31 @@ class _Street(hh._BaseStreet):
 
         return name, action, amount
 
+    def _parse_join_table(self, line):
+        splited = line.split()
+        name = splited[0]
+        seat = splited[-1][1:]
+        return name, Action.JOIN, seat
+
+    def _parse_leave_table(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.LEAVE, None
+
+    def _parse_timed_out(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.TIMED_OUT, None
+
+    def _parse_disconnected(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.DISCONNECTED, None
+
+    def _parse_connected(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.CONNECTED, None
 
 @implementer(hh.IHandHistory)
 class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory):

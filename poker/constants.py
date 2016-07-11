@@ -70,7 +70,12 @@ class Action(PokerEnum):
     WIN = 'win', 'won', 'collected'
     SHOW = 'show',
     MUCK = "don't show", "didn't show", 'did not show', 'mucks'
+    JOIN = 'joins',
+    LEAVE = 'leave',
+    TIMED_OUT = 'timed out',
     THINK = 'seconds left to act',
+    CONNECTED = 'connected',
+    DISCONNECTED = 'disconnected',
 
 
 class Position(PokerEnum):
