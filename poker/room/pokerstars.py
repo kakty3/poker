@@ -21,7 +21,7 @@ __all__ = ['PokerStarsHandHistory', 'Notes']
 @implementer(hh.IStreet)
 class _Street(hh._BaseStreet):
     _player_action_re = re.compile(r'(?P<name>.+):\s(?P<action>.+?\b)(?:\s?.?(?P<amount>\d+(?:\.\d+)?))?')
-    _uncalled_re = re.compile(r'^Uncalled bet \(.?(?P<amount>\d+(?:\.\d+))\).+(?P<name>\b[^\s]+)$')
+    _uncalled_re = re.compile(r'^Uncalled bet \(.?(?P<amount>\d+(?:\.\d+)?)\).+(?P<name>\b[^\s]+)$')
     _collected_re = re.compile(r'(?P<name>.+?) collected .?(?P<amount>\d+(?:\.\d+)?)')
 
     def _parse_cards(self, boardline):
