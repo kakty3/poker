@@ -20,9 +20,9 @@ __all__ = ['PokerStarsHandHistory', 'Notes']
 
 @implementer(hh.IStreet)
 class _Street(hh._BaseStreet):
-    _player_action_re = re.compile(r'(?P<name>.+):\s(?P<action>.+?\b)(?:\s?.?(?P<amount>\d+(?:\.\d+)?))?')
-    _uncalled_re = re.compile(r'^Uncalled bet \(.?(?P<amount>\d+(?:\.\d+)?)\).+(?P<name>\b[^\s]+)$')
-    _collected_re = re.compile(r'(?P<name>.+?) collected .?(?P<amount>\d+(?:\.\d+)?)')
+    _player_action_re = re.compile(r'^(?P<name>.+):\s+(?P<action>.+?\b)\s*(?:[^\d]*?(?P<amount>\d+(?:\.\d+)?))?')
+    _uncalled_re = re.compile(r'^Uncalled bet \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\) returned to\s+(?P<name>.+)$')
+    _collected_re = re.compile(r'^(?P<name>.+?) collected [^\d]*?(?P<amount>\d+(?:\.\d+)?)')
 
     def _parse_cards(self, boardline):
         self.cards = (Card(boardline[1:3]), Card(boardline[4:6]), Card(boardline[7:9]))
@@ -144,9 +144,9 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                         """, re.VERBOSE)
     _table_re = re.compile(r"^Table '(.*)' (\d+)-max Seat #(?P<button>\d+) is the button")
     _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
-    _hero_re = re.compile(r"Dealt to (?P<hero_name>.+?) \[(?P<cards>.+?)\]")
-    _pot_re = re.compile(r"^Total pot .?(\d+(?:\.\d+)?) .*\| Rake .?(\d+(?:\.\d+)?)")
-    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \(.?(\d+(?:\.\d+)?)\)")
+    _hero_re = re.compile(r"^Dealt to (?P<hero_name>.+?) \[(?P<cards>.+?)\]")
+    _pot_re = re.compile(r"^Total pot [^\d]*?(\d+(?:\.\d+)?) .*\| Rake [^\d]*?(\d+(?:\.\d+)?)")
+    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \([^\d]*?(\d+(?:\.\d+)?)\)")
     _showdown_re = re.compile(r"^Seat (\d+): (.+?) showed \[.+?\] and won")
     _ante_re = re.compile(r".*posts the ante (\d+(?:\.\d+)?)")
     _board_re = re.compile(r"(?<=[\[ ])(..)(?=[\] ])")
