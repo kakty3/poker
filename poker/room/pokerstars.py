@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, absolute_import, division, print_function
 
 import re
+from itertools import ifilter
 from decimal import Decimal
 from datetime import datetime
 from collections import namedtuple
@@ -20,97 +21,13 @@ __all__ = ['PokerStarsHandHistory', 'Notes']
 
 @implementer(hh.IStreet)
 class _Street(hh._BaseStreet):
-    _player_action_re = re.compile(r'^(?P<name>.+):\s+(?P<action>.+?\b)\s*(?:[^\d]*?(?P<amount>\d+(?:\.\d+)?))?')
-    _uncalled_re = re.compile(r'^Uncalled bet \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\) returned to\s+(?P<name>.+)$')
-    _collected_re = re.compile(r'^(?P<name>.+?) collected [^\d]*?(?P<amount>\d+(?:\.\d+)?)')
-
     def _parse_cards(self, boardline):
         self.cards = (Card(boardline[1:3]), Card(boardline[4:6]), Card(boardline[7:9]))
 
     def _parse_actions(self, actionlines):
-        actions = []
-        for line in actionlines:
-            if line.startswith('Uncalled bet'):
-                action = self._parse_uncalled(line)
-            elif 'collected' in line:
-                action = self._parse_collected(line)
-            elif "doesn't show hand" in line:
-                action = self._parse_muck(line)
-            elif ' said, "' in line:  # skip chat lines
-                continue
-            elif ':' in line:
-                action = self._parse_player_action(line)
-            elif 'joins the table' in line:
-                action = self._parse_join_table(line)
-            elif 'leaves the table' in line:
-                action = self._parse_leave_table(line)
-            elif 'has timed out' in line:
-                action = self._parse_timed_out(line)
-            elif 'is connected' in line:
-                action = self._parse_connected(line)
-            elif 'is disconnected' in line:
-                action = self._parse_disconnected(line)
-            else:
-                raise RuntimeError("bad action line: " + line)
-
-            actions.append(hh._PlayerAction(*action))
+        ap = ActionParser()
+        actions = [ap.parse(action_str) for action_str in actionlines]
         self.actions = tuple(actions) if actions else None
-
-    def _parse_uncalled(self, line):
-        match = self._uncalled_re.match(line)
-        name = match.group('name')
-        amount = match.group('amount')
-        return name, Action.RETURN, Decimal(amount)
-
-    def _parse_collected(self, line):
-        match = self._collected_re.match(line)
-        name = match.group('name')
-        amount = match.group('amount')
-        self.pot = Decimal(amount)
-        return name, Action.WIN, self.pot
-
-    def _parse_muck(self, line):
-        colon_index = line.find(':')
-        name = line[:colon_index]
-        return name, Action.MUCK, None
-
-    def _parse_player_action(self, line):
-        match = self._player_action_re.match(line)
-        name = match.group('name')
-        action = Action(match.group('action'))
-        amount = match.group('amount')
-        try:
-            amount = Decimal(amount)
-        except TypeError:
-            pass
-
-        return name, action, amount
-
-    def _parse_join_table(self, line):
-        splited = line.split()
-        name = splited[0]
-        seat = splited[-1][1:]
-        return name, Action.JOIN, seat
-
-    def _parse_leave_table(self, line):
-        splited = line.split()
-        name = splited[0]
-        return name, Action.LEAVE, None
-
-    def _parse_timed_out(self, line):
-        splited = line.split()
-        name = splited[0]
-        return name, Action.TIMED_OUT, None
-
-    def _parse_disconnected(self, line):
-        splited = line.split()
-        name = splited[0]
-        return name, Action.DISCONNECTED, None
-
-    def _parse_connected(self, line):
-        splited = line.split()
-        name = splited[0]
-        return name, Action.CONNECTED, None
 
 
 class ActionParser(object):
@@ -118,34 +35,27 @@ class ActionParser(object):
     _uncalled_re = re.compile(r'^Uncalled bet \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\) returned to\s+(?P<name>.+)$')
     _collected_re = re.compile(r'^(?P<name>.+?) collected [^\d]*?(?P<amount>\d+(?:\.\d+)?)')
 
-    # @classmethod
     def parse(self, action_str):
-        if action_str.startswith('Uncalled bet'):
-            action = self._parse_uncalled(action_str)
-        elif ' collected ' in action_str:
-            action = self._parse_collected(action_str)
-        elif "doesn't show hand" in action_str:
-            action = self._parse_muck(action_str)
-        elif ' said, "' in action_str:  # skip chat lines
-            action = None
-        elif ':' in action_str:
-            action = self._parse_player_action(action_str)
-        elif 'joins the table' in action_str:
-            action = self._parse_join_table(action_str)
-        elif 'leaves the table' in action_str:
-            action = self._parse_leave_table(action_str)
-        elif 'has timed out' in action_str:
-            action = self._parse_timed_out(action_str)
-        elif 'is connected' in action_str:
-            action = self._parse_connected(action_str)
-        elif 'is disconnected' in action_str:
-            action = self._parse_disconnected(action_str)
-        elif 'was removed' in action_str:
-            action = self._parse_removed(action_str)
-        else:
+        parse_methods = (
+            ('Uncalled bet', self._parse_uncalled),
+            (' collected ', self._parse_collected),
+            (' doesn\'t show hand', self._parse_muck),
+            (': ', self._parse_player_action),
+            ('joins the table', self._parse_join_table),
+            ('leaves the table', self._parse_leave_table),
+            ('has timed out', self._parse_timed_out),
+            ('is connected', self._parse_connected),
+            ('is disconnected', self._parse_disconnected),
+            ('was removed', self._parse_removed)
+        )
+        try:
+            _, parse_function =\
+                ifilter(lambda (substr, _): substr in action_str, parse_methods).next()
+            name, action, amount = parse_function(action_str)
+        except StopIteration:
             raise RuntimeError("Unknown action: " + action_str)
 
-        return hh._PlayerAction(*action)
+        return hh._PlayerAction(name, action, amount)
 
     def _parse_uncalled(self, line):
         match = self._uncalled_re.match(line)
@@ -162,8 +72,8 @@ class ActionParser(object):
         match = self._collected_re.match(line)
         name = match.group('name')
         amount = match.group('amount')
-        self.pot = Decimal(amount)
-        return name, Action.WIN, self.pot
+        # self.pot = Decimal(amount)
+        return name, Action.WIN, Decimal(amount)
 
     def _parse_muck(self, line):
         colon_index = line.find(':')
@@ -174,11 +84,10 @@ class ActionParser(object):
         match = self._player_action_re.match(line)
         name = match.group('name')
         action = Action(match.group('action'))
-        amount = match.group('amount')
         try:
-            amount = Decimal(amount)
+            amount = Decimal(match.group('amount'))
         except TypeError:
-            pass
+            amount = None
 
         return name, action, amount
 
@@ -383,9 +292,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
 
             action_lines = self._splitted[start:stop]
             if action_lines:
-                street_actions = tuple(ap.parse(action_str)
-                                       for action_str
-                                       in action_lines)
+                street_actions =\
+                    tuple(ap.parse(action_str) for action_str in action_lines)
             else:
                 street_actions = None
             setattr(self, street_attr, street_actions)

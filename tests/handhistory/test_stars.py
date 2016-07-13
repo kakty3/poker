@@ -256,7 +256,7 @@ class TestHandWithFlopOnly:
         ('has_gutshot', True),
         ('has_flushdraw', False),
         ('players', ('W2lkm2n', 'MISTRPerfect')),
-        ('pot', Decimal(150))
+        # ('pot', Decimal(150))
     ])
     def test_flop_attributes(self, hand, attribute, expected_value):
         assert getattr(hand.flop, attribute) == expected_value
