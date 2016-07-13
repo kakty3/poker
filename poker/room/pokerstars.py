@@ -112,6 +112,96 @@ class _Street(hh._BaseStreet):
         name = splited[0]
         return name, Action.CONNECTED, None
 
+
+class ActionParser(object):
+    _player_action_re = re.compile(r'^(?P<name>.+):\s+(?P<action>.+?\b)\s*(?:[^\d]*?(?P<amount>\d+(?:\.\d+)?))?')
+    _uncalled_re = re.compile(r'^Uncalled bet \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\) returned to\s+(?P<name>.+)$')
+    _collected_re = re.compile(r'^(?P<name>.+?) collected [^\d]*?(?P<amount>\d+(?:\.\d+)?)')
+
+    # @classmethod
+    def parse(self, action_str):
+        if action_str.startswith('Uncalled bet'):
+            action = self._parse_uncalled(action_str)
+        elif ' collected ' in action_str:
+            action = self._parse_collected(action_str)
+        elif "doesn't show hand" in action_str:
+            action = self._parse_muck(action_str)
+        elif ' said, "' in action_str:  # skip chat lines
+            action = None
+        elif ':' in action_str:
+            action = self._parse_player_action(action_str)
+        elif 'joins the table' in action_str:
+            action = self._parse_join_table(action_str)
+        elif 'leaves the table' in action_str:
+            action = self._parse_leave_table(action_str)
+        elif 'has timed out' in action_str:
+            action = self._parse_timed_out(action_str)
+        elif 'is connected' in action_str:
+            action = self._parse_connected(action_str)
+        elif 'is disconnected' in action_str:
+            action = self._parse_disconnected(action_str)
+        else:
+            raise RuntimeError("Unknown action: " + action_str)
+
+        return hh._PlayerAction(*action)
+
+    def _parse_uncalled(self, line):
+        match = self._uncalled_re.match(line)
+        name = match.group('name')
+        amount = match.group('amount')
+        return name, Action.RETURN, Decimal(amount)
+
+    def _parse_collected(self, line):
+        match = self._collected_re.match(line)
+        name = match.group('name')
+        amount = match.group('amount')
+        self.pot = Decimal(amount)
+        return name, Action.WIN, self.pot
+
+    def _parse_muck(self, line):
+        colon_index = line.find(':')
+        name = line[:colon_index]
+        return name, Action.MUCK, None
+
+    def _parse_player_action(self, line):
+        match = self._player_action_re.match(line)
+        name = match.group('name')
+        action = Action(match.group('action'))
+        amount = match.group('amount')
+        try:
+            amount = Decimal(amount)
+        except TypeError:
+            pass
+
+        return name, action, amount
+
+    def _parse_join_table(self, line):
+        splited = line.split()
+        name = splited[0]
+        seat = splited[-1][1:]
+        return name, Action.JOIN, seat
+
+    def _parse_leave_table(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.LEAVE, None
+
+    def _parse_timed_out(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.TIMED_OUT, None
+
+    def _parse_disconnected(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.DISCONNECTED, None
+
+    def _parse_connected(self, line):
+        splited = line.split()
+        name = splited[0]
+        return name, Action.CONNECTED, None
+
+
 @implementer(hh.IHandHistory)
 class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory):
     """Parses PokerStars Tournament hands."""
@@ -264,7 +354,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     def _parse_preflop(self):
         start = self._sections[0] + 3
         stop = self._sections[1]
-        self.preflop_actions = tuple(self._splitted[start:stop])
+        ap = ActionParser()
+        self.preflop_actions = tuple(ap.parse(action_str) for action_str in self._splitted[start:stop])
 
     def _parse_flop(self):
         try:
@@ -277,15 +368,16 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
         self.flop = _Street(floplines)
 
     def _parse_street(self, street):
+        street_attr = '%s_actions' % street.lower()
         try:
             start = self._splitted.index(street.upper()) + 2
             stop = self._splitted.index('', start)
-            street_actions = self._splitted[start:stop]
-            setattr(self, "{}_actions".format(street.lower()),
-                    tuple(street_actions) if street_actions else None)
+            ap = ActionParser()
+            street_actions = [ap.parse(action_str) for action_str in self._splitted[start:stop]]
+            setattr(self, street_attr, tuple(street_actions) if street_actions else None)
         except ValueError:
             setattr(self, street, None)
-            setattr(self, '{}_actions'.format(street.lower()), None)
+            setattr(self, street_attr, None)
 
     def _parse_showdown(self):
         self.show_down = 'SHOW DOWN' in self._splitted
