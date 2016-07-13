@@ -250,13 +250,16 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     def _parse_hero(self):
         hole_cards_line = self._splitted[self._sections[0] + 2]
         match = self._hero_re.match(hole_cards_line)
-        hero, hero_index = self._get_hero_from_players(match.group('hero_name'))
-        p = re.compile(r'(..\b)')
-        cards = re.findall(p, match.group('cards'))
-        hero = hero._replace(combo=Combo.from_array(cards))
-        self.hero = self.players[hero_index] = hero
-        if self.button.name == self.hero.name:
-            self.button = hero
+        try:
+            hero, hero_index = self._get_hero_from_players(match.group('hero_name'))
+            p = re.compile(r'(..\b)')
+            cards = re.findall(p, match.group('cards'))
+            hero = hero._replace(combo=Combo.from_array(cards))
+            self.hero = self.players[hero_index] = hero
+            if self.button.name == self.hero.name:
+                self.button = hero
+        except AttributeError:
+            self.hero = None
 
     def _parse_preflop(self):
         start = self._sections[0] + 3

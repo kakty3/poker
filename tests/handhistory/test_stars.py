@@ -349,6 +349,15 @@ class TestAllinPreflopHand:
         assert hand.flop.pot == Decimal(26310)
 
 
+class TestHeroMissing:
+    hand_text = stars_hands.HAND6
+    @pytest.mark.parametrize(('attribute', 'expected_value'), [
+        ('hero', None),
+    ])
+    def test_body(self, hand, attribute, expected_value):
+        assert getattr(hand, attribute) == expected_value
+
+
 class TestBodyMissingPlayerNoBoard:
     hand_text = stars_hands.HAND3
 
