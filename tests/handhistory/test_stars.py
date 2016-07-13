@@ -352,11 +352,16 @@ class TestAllinPreflopHand:
 
 class TestHeroMissing:
     hand_text = stars_hands.HAND6
-    @pytest.mark.parametrize(('attribute', 'expected_value'), [
-        ('hero', None),
-    ])
-    def test_body(self, hand, attribute, expected_value):
-        assert getattr(hand, attribute) == expected_value
+
+    def test_body(self, hand):
+        assert getattr(hand, 'hero') is None
+
+
+class TestEvents:
+    hand_text = stars_hands.HAND6
+
+    def test_player_removed(self, hand):
+        assert hand.preflop_actions[-1] == _PlayerAction('GenGen', Action.REMOVED, None)
 
 
 class TestBodyMissingPlayerNoBoard:

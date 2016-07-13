@@ -140,6 +140,8 @@ class ActionParser(object):
             action = self._parse_connected(action_str)
         elif 'is disconnected' in action_str:
             action = self._parse_disconnected(action_str)
+        elif 'was removed' in action_str:
+            action = self._parse_removed(action_str)
         else:
             raise RuntimeError("Unknown action: " + action_str)
 
@@ -150,6 +152,11 @@ class ActionParser(object):
         name = match.group('name')
         amount = match.group('amount')
         return name, Action.RETURN, Decimal(amount)
+
+    def _parse_removed(self, line):
+        i = line.index('was removed')
+        name = line[:i].strip()
+        return name, Action.REMOVED, None
 
     def _parse_collected(self, line):
         match = self._collected_re.match(line)
@@ -373,8 +380,15 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             start = self._splitted.index(street.upper()) + 2
             stop = self._splitted.index('', start)
             ap = ActionParser()
-            street_actions = [ap.parse(action_str) for action_str in self._splitted[start:stop]]
-            setattr(self, street_attr, tuple(street_actions) if street_actions else None)
+
+            action_lines = self._splitted[start:stop]
+            if action_lines:
+                street_actions = tuple(ap.parse(action_str)
+                                       for action_str
+                                       in action_lines)
+            else:
+                street_actions = None
+            setattr(self, street_attr, street_actions)
         except ValueError:
             setattr(self, street, None)
             setattr(self, street_attr, None)

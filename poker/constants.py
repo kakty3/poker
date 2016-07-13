@@ -76,6 +76,7 @@ class Action(PokerEnum):
     THINK = 'seconds left to act',
     CONNECTED = 'connected',
     DISCONNECTED = 'disconnected',
+    REMOVED = 'removed', 'was removed'
 
 
 class Position(PokerEnum):

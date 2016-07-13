@@ -281,6 +281,7 @@ IPODpoker88: folds
 pjo80: folds
 Brimill: folds
 XZ18: folds
+GenGen was removed from the table for failing to post
 *** FLOP *** [Kd Qc Ad]
 .prestige.U$: checks
 daoudi007708: bets 20
