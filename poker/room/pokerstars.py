@@ -92,29 +92,28 @@ class ActionParser(object):
         return name, action, amount
 
     def _parse_join_table(self, line):
-        splited = line.split()
-        name = splited[0]
-        seat = splited[-1][1:]
-        return name, Action.JOIN, seat
+        i = line.index('joins the table')
+        name = line[:i].strip()
+        return name, Action.JOIN, None
 
     def _parse_leave_table(self, line):
-        splited = line.split()
-        name = splited[0]
+        i = line.index('leaves the table')
+        name = line[:i].strip()
         return name, Action.LEAVE, None
 
     def _parse_timed_out(self, line):
-        splited = line.split()
-        name = splited[0]
+        i = line.index('has timed out')
+        name = line[:i].strip()
         return name, Action.TIMED_OUT, None
 
     def _parse_disconnected(self, line):
-        splited = line.split()
-        name = splited[0]
+        i = line.index('is disconnected')
+        name = line[:i].strip()
         return name, Action.DISCONNECTED, None
 
     def _parse_connected(self, line):
-        splited = line.split()
-        name = splited[0]
+        i = line.index('is connected')
+        name = line[:i].strip()
         return name, Action.CONNECTED, None
 
 

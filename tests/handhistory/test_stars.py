@@ -548,3 +548,23 @@ class TestPlayerNameWithDot:
         player_names = [p.name for p in hand.players]
         player_index = player_names.index('.prestige.U$')
         assert hand.players[player_index].stack == 3000
+
+
+class TestPlayerNameWithSpace:
+    hand_text = stars_hands.HAND7
+
+    def test_player_list(self, hand):
+        assert hand.players[0].name == 'flett l2'
+
+
+    @pytest.mark.parametrize(('attribute', 'expected_value'), [
+        ('actions', (
+            _PlayerAction('flett 12', Action.LEAVE, None),
+            _PlayerAction('Sin Richest', Action.JOIN, None),
+            _PlayerAction('gara za2', Action.TIMED_OUT, None),
+            _PlayerAction('ge na', Action.DISCONNECTED, None),
+            _PlayerAction('ge na', Action.CONNECTED, None),
+        )),
+    ])
+    def test_flop_actions(self, hand, attribute, expected_value):
+        assert getattr(hand.flop, attribute) == expected_value

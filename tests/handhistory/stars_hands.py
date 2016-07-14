@@ -307,3 +307,32 @@ Seat 6: W2lkm2n folded before Flop (didn't bet)
 Seat 7: sednanref folded before Flop (didn't bet)
 Seat 8: daoudi007708 folded on the River
 Seat 9: IPODpoker88 folded before Flop (didn't bet)"""
+
+HAND7 = """
+PokerStars Hand #105024000105: Tournament #797469411, $3.19+$0.31 USD Hold'em No Limit - Level I (10/20) - 2013/10/04 19:53:27 CET [2013/10/04 13:53:27 ET]
+Table '797469411 15' 9-max Seat #1 is the button
+Seat 1: flett l2 (1500 in chips)
+Seat 2: santy312 (3000 in chips)
+flett l2: posts small blind 10
+santy312: posts big blind 20
+*** HOLE CARDS ***
+flett l2: folds
+santy312: folds
+*** FLOP *** [2s 6d 6h]
+flett 12 leaves the table
+Sin Richest joins the table at seat #1
+gara za2 has timed out
+ge na is disconnected
+ge na is connected
+*** SUMMARY ***
+Total pot 150 | Rake 0
+Board [2s 6d 6h]
+Seat 1: flett l2 (button) folded before Flop (didn't bet)
+Seat 2: santy312 (small blind) folded before Flop
+Seat 3: flavio766 (big blind) folded before Flop
+Seat 4: strongi82 folded before Flop (didn't bet)
+Seat 5: W2lkm2n collected (150)
+Seat 6: MISTRPerfect folded on the Flop
+Seat 7: blak_douglas folded before Flop (didn't bet)
+Seat 8: sinus91 folded before Flop (didn't bet)
+Seat 9: STBIJUJA folded before Flop (didn't bet)"""
