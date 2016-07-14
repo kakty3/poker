@@ -2,6 +2,8 @@
 from __future__ import unicode_literals, absolute_import, division, print_function
 
 import re
+import logging
+logging.basicConfig(level=logging.ERROR)
 from itertools import ifilter
 from decimal import Decimal
 from datetime import datetime
@@ -26,7 +28,14 @@ class _Street(hh._BaseStreet):
 
     def _parse_actions(self, actionlines):
         ap = ActionParser()
-        actions = [ap.parse(action_str) for action_str in actionlines]
+        actions = list()
+        for action_str in actionlines:
+            try:
+                action = ap.parse(action_str)
+                actions.append(action)
+            except UnknownActionError as e:
+                logging.warning(e.message)
+
         self.actions = tuple(actions) if actions else None
 
 
@@ -53,7 +62,7 @@ class ActionParser(object):
                 ifilter(lambda (substr, _): substr in action_str, parse_methods).next()
             name, action, amount = parse_function(action_str)
         except StopIteration:
-            raise RuntimeError("Unknown action: " + action_str)
+            raise UnknownActionError(action_str)
 
         return hh._PlayerAction(name, action, amount)
 
@@ -115,6 +124,10 @@ class ActionParser(object):
         i = line.index('is connected')
         name = line[:i].strip()
         return name, Action.CONNECTED, None
+
+class UnknownActionError(Exception):
+    def __init__(self, action_str):
+        super(UnknownActionError, self).__init__('Unknown action: %s.' % action_str)
 
 
 @implementer(hh.IHandHistory)
@@ -270,7 +283,15 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
         start = self._sections[0] + 3
         stop = self._sections[1]
         ap = ActionParser()
-        self.preflop_actions = tuple(ap.parse(action_str) for action_str in self._splitted[start:stop])
+        actions = list()
+        for action_str in self._splitted[start:stop]:
+            try:
+                action = ap.parse(action_str)
+                actions.append(action)
+            except UnknownActionError as e:
+                logging.warning(e.message)
+
+        self.preflop_actions = tuple(actions) if actions else None
 
     def _parse_flop(self):
         try:
@@ -290,12 +311,18 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             ap = ActionParser()
 
             action_lines = self._splitted[start:stop]
-            if action_lines:
-                street_actions =\
-                    tuple(ap.parse(action_str) for action_str in action_lines)
-            else:
-                street_actions = None
-            setattr(self, street_attr, street_actions)
+            actions = list()
+            for action_str in action_lines:
+                try:
+                    actions.append(ap.parse(action_str))
+                except UnknownActionError as e:
+                    logging.warning(e.message)
+            # if action_lines:
+            #     street_actions =\
+            #         tuple(ap.parse(action_str) for action_str in action_lines)
+            # else:
+            #     street_actions = None
+            setattr(self, street_attr, actions if actions else None)
         except ValueError:
             setattr(self, street, None)
             setattr(self, street_attr, None)
