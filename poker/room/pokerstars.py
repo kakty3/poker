@@ -3,7 +3,6 @@ from __future__ import unicode_literals, absolute_import, division, print_functi
 
 import re
 import logging
-logging.basicConfig(level=logging.ERROR)
 from itertools import ifilter
 from decimal import Decimal
 from datetime import datetime
@@ -21,6 +20,10 @@ from ..constants import Limit, Game, GameType, Currency, Action, MoneyType
 __all__ = ['PokerStarsHandHistory', 'Notes']
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.ERROR)
+
+
 @implementer(hh.IStreet)
 class _Street(hh._BaseStreet):
     def _parse_cards(self, boardline):
@@ -34,7 +37,7 @@ class _Street(hh._BaseStreet):
                 action = ap.parse(action_str)
                 actions.append(action)
             except UnknownActionError as e:
-                logging.warning(e.message)
+                logger.warning(e.message)
 
         self.actions = tuple(actions) if actions else None
 
@@ -289,7 +292,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                 action = ap.parse(action_str)
                 actions.append(action)
             except UnknownActionError as e:
-                logging.warning(e.message)
+                logger.warning(e.message)
 
         self.preflop_actions = tuple(actions) if actions else None
 
@@ -316,7 +319,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                 try:
                     actions.append(ap.parse(action_str))
                 except UnknownActionError as e:
-                    logging.warning(e.message)
+                    logger.warning(e.message)
             # if action_lines:
             #     street_actions =\
             #         tuple(ap.parse(action_str) for action_str in action_lines)
