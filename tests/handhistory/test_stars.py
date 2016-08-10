@@ -568,3 +568,24 @@ class TestPlayerNameWithSpace:
     ])
     def test_flop_actions(self, hand, attribute, expected_value):
         assert getattr(hand.flop, attribute) == expected_value
+
+
+class TestWinner:
+    @staticmethod
+    def hand(hand_text):
+        hh = PokerStarsHandHistory(hand_text)
+        hh.parse()
+        return hh
+
+    @pytest.mark.parametrize(('hand_text', 'winners'), [
+        (stars_hands.HAND1, ('W2lkm2n',)),
+        (stars_hands.HAND2, ('costamar',)),
+        (stars_hands.HAND3, ('Theralion',)),
+        (stars_hands.HAND4, ('flettl2',)),
+        (stars_hands.HAND5, ('.prestige.U$',)),
+        (stars_hands.HAND6, ('.prestige.U$',)),
+        (stars_hands.HAND7, ('W2lkm2n',)),
+        (stars_hands.HAND_WITH_SHOWDOWN, ('krissu23',)),
+    ])
+    def test(self, hand_text, winners):
+        assert self.hand(hand_text).winners == winners

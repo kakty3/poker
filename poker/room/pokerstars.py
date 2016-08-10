@@ -128,6 +128,7 @@ class ActionParser(object):
         name = line[:i].strip()
         return name, Action.CONNECTED, None
 
+
 class UnknownActionError(Exception):
     def __init__(self, action_str):
         super(UnknownActionError, self).__init__('Unknown action: %s.' % action_str)
@@ -167,8 +168,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
     _hero_re = re.compile(r"^Dealt to (?P<hero_name>.+?) \[(?P<cards>.+?)\]")
     _pot_re = re.compile(r"^Total pot [^\d]*?(\d+(?:\.\d+)?) .*\| Rake [^\d]*?(\d+(?:\.\d+)?)")
-    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \([^\d]*?(\d+(?:\.\d+)?)\)")
-    _showdown_re = re.compile(r"^Seat (\d+): (.+?) showed \[.+?\] and won")
+    _winner_re = re.compile(r"^Seat (?:\d+): (?P<name>.+?)\s?(?:\(.+?\))? collected \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\)")
+    _showdown_re = re.compile(r"^Seat (?:\d+): (?P<name>.+?)\s?(?:\(.+?\))? showed \[.+?\] and won")
     _ante_re = re.compile(r".*posts the ante (\d+(?:\.\d+)?)")
     _board_re = re.compile(r"(?<=[\[ ])(..)(?=[\] ])")
     _money_re = re.compile(r"\$\d+\.?\d+")
@@ -325,7 +326,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             #         tuple(ap.parse(action_str) for action_str in action_lines)
             # else:
             #     street_actions = None
-            setattr(self, street_attr, actions if actions else None)
+            setattr(self, street_attr, tuple(actions) if actions else None)
         except ValueError:
             setattr(self, street, None)
             setattr(self, street_attr, None)
@@ -352,10 +353,10 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
         for line in self._splitted[start:]:
             if not self.show_down and "collected" in line:
                 match = self._winner_re.match(line)
-                winners.add(match.group(2))
+                winners.add(match.group('name'))
             elif self.show_down and "won" in line:
                 match = self._showdown_re.match(line)
-                winners.add(match.group(2))
+                winners.add(match.group('name'))
 
         self.winners = tuple(winners)
 

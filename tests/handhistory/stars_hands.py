@@ -336,3 +336,52 @@ Seat 6: MISTRPerfect folded on the Flop
 Seat 7: blak_douglas folded before Flop (didn't bet)
 Seat 8: sinus91 folded before Flop (didn't bet)
 Seat 9: STBIJUJA folded before Flop (didn't bet)"""
+
+HAND_WITH_SHOWDOWN = """
+PokerStars Hand #154738798073:  Omaha Pot Limit ($0.50/$1.00 USD) - 2016/06/14 22:35:03 CET [2016/06/14 16:35:03 ET]
+Table 'Hadar II' 6-max Seat #5 is the button
+Seat 1: IKermit ($56.89 in chips)
+Seat 2: barrybab333 ($101.72 in chips)
+Seat 3: Maytscha1 ($125.79 in chips)
+Seat 4: Ellistrago ($100 in chips)
+Seat 5: krissu23 ($47.51 in chips)
+Seat 6: Psychosis80 ($136.13 in chips)
+Psychosis80: posts small blind $0.50
+IKermit: posts big blind $1
+*** HOLE CARDS ***
+Dealt to Psychosis80 [9s Td 6c 9h]
+barrybab333: folds
+Maytscha1: raises $2 to $3
+Ellistrago: folds
+krissu23: calls $3
+Psychosis80: folds
+IKermit: calls $2
+*** FLOP *** [6d 8d 9c]
+IKermit: checks
+Maytscha1: bets $4
+krissu23: raises $4 to $8
+IKermit: calls $8
+Maytscha1: calls $4
+*** TURN *** [6d 8d 9c] [Ah]
+IKermit: checks
+Maytscha1: checks
+krissu23: bets $31.82
+IKermit: raises $14.07 to $45.89 and is all-in
+Maytscha1: folds
+krissu23: calls $4.69 and is all-in
+Uncalled bet ($9.38) returned to IKermit
+*** RIVER *** [6d 8d 9c Ah] [2d]
+*** SHOW DOWN ***
+IKermit: shows [Kd 8c Ac 8s] (three of a kind, Eights)
+krissu23: shows [5s 7s 7c As] (a straight, Five to Nine)
+krissu23 collected $104.02 from pot
+*** SUMMARY ***
+Total pot $106.52 | Rake $2.50
+Board [6d 8d 9c Ah 2d]
+Seat 1: IKermit (big blind) showed [Kd 8c Ac 8s] and lost with three of a kind, Eights
+Seat 2: barrybab333 folded before Flop (didn't bet)
+Seat 3: Maytscha1 folded on the Turn
+Seat 4: Ellistrago folded before Flop (didn't bet)
+Seat 5: krissu23 (button) showed [5s 7s 7c As] and won ($104.02) with a straight, Five to Nine
+Seat 6: Psychosis80 (small blind) folded before Flop
+"""
