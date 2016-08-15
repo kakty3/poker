@@ -374,6 +374,7 @@ Uncalled bet ($9.38) returned to IKermit
 *** SHOW DOWN ***
 IKermit: shows [Kd 8c Ac 8s] (three of a kind, Eights)
 krissu23: shows [5s 7s 7c As] (a straight, Five to Nine)
+Maytscha1: mucks
 krissu23 collected $104.02 from pot
 *** SUMMARY ***
 Total pot $106.52 | Rake $2.50

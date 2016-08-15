@@ -52,22 +52,30 @@ class ActionParser(object):
             ('Uncalled bet', self._parse_uncalled),
             (' collected ', self._parse_collected),
             (' doesn\'t show hand', self._parse_muck),
-            (': ', self._parse_player_action),
+            ('mucks hand', self._parse_muck),
             ('joins the table', self._parse_join_table),
             ('leaves the table', self._parse_leave_table),
             ('has timed out', self._parse_timed_out),
             ('is connected', self._parse_connected),
             ('is disconnected', self._parse_disconnected),
-            ('was removed', self._parse_removed)
+            ('was removed', self._parse_removed),
+            (' shows ', self._parse_show),
+            (': ', self._parse_player_action),
         )
         try:
             _, parse_function =\
                 ifilter(lambda (substr, _): substr in action_str, parse_methods).next()
-            name, action, amount = parse_function(action_str)
+            name, action, value = parse_function(action_str)
         except StopIteration:
             raise UnknownActionError(action_str)
 
-        return hh._PlayerAction(name, action, amount)
+        return hh._PlayerAction(name, action, value)
+
+    def _parse_show(self, line):
+        name = line[:line.index(':')]
+        cards_str = line[line.index('[') + 1:line.index(']')]
+        combo = Combo.from_array(cards_str.split())
+        return name, Action.SHOW, combo
 
     def _parse_uncalled(self, line):
         match = self._uncalled_re.match(line)
@@ -332,7 +340,23 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             setattr(self, street_attr, None)
 
     def _parse_showdown(self):
-        self.show_down = 'SHOW DOWN' in self._splitted
+        try:
+            start = self._splitted.index('SHOW DOWN') + 1
+            stop = self._splitted.index('', start)
+            action_lines = self._splitted[start:stop]
+
+            ap = ActionParser()
+            actions = list()
+            for action_str in action_lines:
+                try:
+                    actions.append(ap.parse(action_str))
+                except UnknownActionError as e:
+                    logger.warning(e.message)
+
+            self.show_down = True
+            self.show_down_actions = tuple(actions)
+        except ValueError:
+            self.show_down = False
 
     def _parse_pot(self):
         potline = self._splitted[self._sections[-1] + 2]

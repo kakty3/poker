@@ -218,13 +218,13 @@ class Combo(_ReprMixin):
         if isinstance(combo, Combo):
             return combo
 
-        if len(combo) != 4:
-            raise ValueError('%r, should have a length of 4' % combo)
-        elif (combo[0] == combo[2] and combo[1] == combo[3]):
-            raise ValueError("{!r}, Pair can't have the same suit: {!r}".format(combo, combo[1]))
+        cards = map(('').join, zip(combo[::2], combo[1::2]))
+
+        if len(cards) != len(set(cards)):
+            raise ValueError('Combo can contain only unique cards.')
 
         self = super(Combo, cls).__new__(cls)
-        self._set_cards_in_order(combo[:2], combo[2:])
+        self._set_cards_in_order(*cards)
         return self
 
     @classmethod
@@ -242,11 +242,9 @@ class Combo(_ReprMixin):
         return self
 
     def __unicode__(self):
-        # return '{}{}'.format(self.first, self.second)
-        return ''.join(self._cards)
+        return ''.join(unicode(self._cards))
 
     def __hash__(self):
-        # return hash(self.first) + hash(self.second)
         return sum([hash(card) for card in self._cards])
 
     def __getstate__(self):
@@ -292,9 +290,6 @@ class Combo(_ReprMixin):
         """Set cards in nondecreasing order"""
         self._cards = [Card(card_str) for card_str in args]
         self._cards.sort(reverse=True)
-        # self.first, self.second = self._cards[:2]
-        # if self.first < self.second:
-        #     self.first, self.second = self.second, self.first
 
     @property
     def first(self):

@@ -218,15 +218,15 @@ class TestHandWithFlopOnly:
         ('river', None),
         ('board', (Card('2s'), Card('6d'), Card('6h'))),
         ('preflop_actions', (
-            _PlayerAction(name=u'strongi82', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'W2lkm2n', action=Action('raise'), amount=Decimal(40)),
-            _PlayerAction(name=u'MISTRPerfect', action=Action('calls'), amount=Decimal(60)),
-            _PlayerAction(name=u'blak_douglas', action=Action('folds'), amount=None),
-            _PlayerAction(name=u'sinus91', action=Action('folds'), amount=None),
-            _PlayerAction(name=u'STBIJUJA', action=Action('folds'), amount=None),
-            _PlayerAction(name=u'flettl2', action=Action('folds'), amount=None),
-            _PlayerAction(name=u'santy312', action=Action('folds'), amount=None),
-            _PlayerAction(name=u'flavio766', action=Action('folds'), amount=None),
+            _PlayerAction(name=u'strongi82', action=Action('fold'), value=None),
+            _PlayerAction(name=u'W2lkm2n', action=Action('raise'), value=Decimal(40)),
+            _PlayerAction(name=u'MISTRPerfect', action=Action('calls'), value=Decimal(60)),
+            _PlayerAction(name=u'blak_douglas', action=Action('folds'), value=None),
+            _PlayerAction(name=u'sinus91', action=Action('folds'), value=None),
+            _PlayerAction(name=u'STBIJUJA', action=Action('folds'), value=None),
+            _PlayerAction(name=u'flettl2', action=Action('folds'), value=None),
+            _PlayerAction(name=u'santy312', action=Action('folds'), value=None),
+            _PlayerAction(name=u'flavio766', action=Action('folds'), value=None),
         )),
         ('turn_actions', None),
         ('river_actions', None),
@@ -305,16 +305,16 @@ class TestAllinPreflopHand:
         ('river', Card('Ks')),
         ('board', (Card('3c'), Card('6s'), Card('9d'), Card('8d'), Card('Ks'))),
         ('preflop_actions', (
-            _PlayerAction(name=u'lkenny44', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'Newfie_187', action=Action('raise'), amount=Decimal(155)),
-            _PlayerAction(name=u'Hokolix', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'pmmr', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'costamar', action=Action('raise'), amount=Decimal(12040)),
-            _PlayerAction(name=u'RichFatWhale', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'W2lkm2n', action=Action('call'), amount=Decimal(11740)),
-            _PlayerAction(name=u'Labahra', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'Lean Abadia', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'costamar', action=Action('return'), amount=Decimal(1255))
+            _PlayerAction(name=u'lkenny44', action=Action('fold'), value=None),
+            _PlayerAction(name=u'Newfie_187', action=Action('raise'), value=Decimal(155)),
+            _PlayerAction(name=u'Hokolix', action=Action('fold'), value=None),
+            _PlayerAction(name=u'pmmr', action=Action('fold'), value=None),
+            _PlayerAction(name=u'costamar', action=Action('raise'), value=Decimal(12040)),
+            _PlayerAction(name=u'RichFatWhale', action=Action('fold'), value=None),
+            _PlayerAction(name=u'W2lkm2n', action=Action('call'), value=Decimal(11740)),
+            _PlayerAction(name=u'Labahra', action=Action('fold'), value=None),
+            _PlayerAction(name=u'Lean Abadia', action=Action('fold'), value=None),
+            _PlayerAction(name=u'costamar', action=Action('return'), value=Decimal(1255))
         )),
         ('turn_actions', None),
         ('river_actions', None),
@@ -404,17 +404,17 @@ class TestBodyMissingPlayerNoBoard:
         ('river', None),
         ('board', None),
         ('preflop_actions', (
-            _PlayerAction(name=u'EuSh0wTelm0', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'panost3', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'Samovlyblen', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'Theralion', action=Action('raise'), amount=Decimal(600)),
-            _PlayerAction(name=u'wrsport1015', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'W2lkm2n', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'fischero68', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'snelle_jel', action=Action('fold'), amount=None),
-            _PlayerAction(name=u'Theralion', action=Action('return'), amount=Decimal(600)),
-            _PlayerAction(name=u'Theralion', action=Action('collected'), amount=Decimal(1900)),
-            _PlayerAction(name=u'Theralion', action=Action('did not show'), amount=None),
+            _PlayerAction(name=u'EuSh0wTelm0', action=Action('fold'), value=None),
+            _PlayerAction(name=u'panost3', action=Action('fold'), value=None),
+            _PlayerAction(name=u'Samovlyblen', action=Action('fold'), value=None),
+            _PlayerAction(name=u'Theralion', action=Action('raise'), value=Decimal(600)),
+            _PlayerAction(name=u'wrsport1015', action=Action('fold'), value=None),
+            _PlayerAction(name=u'W2lkm2n', action=Action('fold'), value=None),
+            _PlayerAction(name=u'fischero68', action=Action('fold'), value=None),
+            _PlayerAction(name=u'snelle_jel', action=Action('fold'), value=None),
+            _PlayerAction(name=u'Theralion', action=Action('return'), value=Decimal(600)),
+            _PlayerAction(name=u'Theralion', action=Action('collected'), value=Decimal(1900)),
+            _PlayerAction(name=u'Theralion', action=Action('did not show'), value=None),
         )),
         ('turn_actions', None),
         ('river_actions', None),
@@ -589,3 +589,30 @@ class TestWinner:
     ])
     def test(self, hand_text, winners):
         assert self.hand(hand_text).winners == winners
+
+
+class TestShowdownActions:
+    hand_text = stars_hands.HAND_WITH_SHOWDOWN
+
+    @pytest.mark.parametrize('expected_value', [
+        (_PlayerAction('IKermit', Action.SHOW, Combo('AcKd8s8c')),
+         _PlayerAction('krissu23', Action.SHOW, Combo('5s7s7cAs')),
+         _PlayerAction('Maytscha1', Action.MUCK, None),
+         _PlayerAction('krissu23', Action.WIN, Decimal('104.02')),)
+    ])
+    def test_flop_actions(self, hand, expected_value):
+        assert hand.show_down_actions == expected_value
+
+
+class TestCombo:
+    @pytest.mark.parametrize(('combo_str', 'expected_combo'), [
+        ('AcKd8s8c', Combo('AcKd8s8c')),
+        ('AcKd', Combo('AcKd')),
+    ])
+    def test_flop_actions(self, combo_str, expected_combo):
+        assert Combo(combo_str) == expected_combo
+
+    @pytest.mark.parametrize('combo_str', ['AsAs', 'AsAsAsAs'])
+    def test_nonunique_combo(self, combo_str):
+        with pytest.raises(ValueError):
+            Combo(combo_str)

@@ -18,7 +18,7 @@ from .card import Rank
 _Player = namedtuple('_Player', 'name, stack, seat, combo')
 """Named tuple for players participating in the hand history."""
 
-_PlayerAction = namedtuple('_PlayerAction', 'name, action, amount')
+_PlayerAction = namedtuple('_PlayerAction', 'name, action, value')
 """Named tuple for player actions on the street."""
 
 
