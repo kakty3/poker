@@ -69,7 +69,7 @@ class Action(PokerEnum):
     RETURN = 'return', 'returned', 'uncalled'
     WIN = 'win', 'won', 'collected'
     SHOW = 'show',
-    MUCK = "don't show", "didn't show", 'did not show', 'mucks'
+    MUCK = 'muck', "don't show", "didn't show", 'did not show',
     JOIN = 'join',
     LEAVE = 'leave',
     TIMED_OUT = 'timed out',

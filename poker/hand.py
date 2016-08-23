@@ -292,6 +292,10 @@ class Combo(_ReprMixin):
         self._cards.sort(reverse=True)
 
     @property
+    def cards(self):
+        return self._cards
+
+    @property
     def first(self):
         return self._cards[0]
 

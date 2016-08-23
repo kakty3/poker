@@ -46,6 +46,7 @@ class ActionParser(object):
     _player_action_re = re.compile(r'^(?P<name>.+):\s+(?P<action>.+?\b)\s*(?:[^\d]*?(?P<amount>\d+(?:\.\d+)?))?')
     _uncalled_re = re.compile(r'^Uncalled bet \([^\d]*?(?P<amount>\d+(?:\.\d+)?)\) returned to\s+(?P<name>.+)$')
     _collected_re = re.compile(r'^(?P<name>.+?) collected [^\d]*?(?P<amount>\d+(?:\.\d+)?)')
+    _join_re = re.compile(r'^(?P<name>.+?) joins the table at seat #(?P<seat>\d+)$')
 
     def parse(self, action_str):
         parse_methods = (
@@ -65,7 +66,7 @@ class ActionParser(object):
         try:
             _, parse_function =\
                 ifilter(lambda (substr, _): substr in action_str, parse_methods).next()
-            name, action, value = parse_function(action_str)
+            name, action, value = parse_function(action_str.strip())
         except StopIteration:
             raise UnknownActionError(action_str)
 
@@ -112,9 +113,8 @@ class ActionParser(object):
         return name, action, amount
 
     def _parse_join_table(self, line):
-        i = line.index('joins the table')
-        name = line[:i].strip()
-        return name, Action.JOIN, None
+        match = self._join_re.match(line)
+        return match.group('name'), Action.JOIN, match.group('seat')
 
     def _parse_leave_table(self, line):
         i = line.index('leaves the table')
@@ -314,6 +314,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
         stop = self._splitted.index('', start)
         floplines = self._splitted[start:stop]
         self.flop = _Street(floplines)
+        self.flop_actions = self.flop.actions
 
     def _parse_street(self, street):
         street_attr = '%s_actions' % street.lower()
@@ -329,11 +330,6 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                     actions.append(ap.parse(action_str))
                 except UnknownActionError as e:
                     logger.warning(e.message)
-            # if action_lines:
-            #     street_actions =\
-            #         tuple(ap.parse(action_str) for action_str in action_lines)
-            # else:
-            #     street_actions = None
             setattr(self, street_attr, tuple(actions) if actions else None)
         except ValueError:
             setattr(self, street, None)
@@ -357,6 +353,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             self.show_down_actions = tuple(actions)
         except ValueError:
             self.show_down = False
+            self.show_down_actions = None
 
     def _parse_pot(self):
         potline = self._splitted[self._sections[-1] + 2]
